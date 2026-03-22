@@ -71,3 +71,9 @@ cscope:
 cargo:
   formula:
     script: curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+starship:
+  check: which starship
+  install: script
+  formula:
+    script: curl -sS https://starship.rs/install.sh | sh
+  default: y
