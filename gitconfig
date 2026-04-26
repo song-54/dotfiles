@@ -5,7 +5,10 @@
 	co=checkout
 	cp=cherry-pick
 	st=status
+	sw=switch
+	rs=restore
 	rst=checkout HEAD --
 	tree=log --graph --full-history --all --pretty=format:"%h%x09%d%x20%s"
 [push]
 	default = simple
+
