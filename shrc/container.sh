@@ -6,6 +6,7 @@ alias dke='docker exec -it'
 alias dksh='docker exec -it'
 alias dkc='docker container'
 alias dki='docker image'
+alias dkrmi='docker images --format "{{.Repository}}:{{.Tag}} ({{.ID}})" | fzf -m | awk "{print $NF}" | tr -d "()" | xargs -r docker rmi'
 alias dkic='docker rmi $(docker images -f "dangling=true" -q)'
 # run --mount type=bind,source=$SRC,target=/$TARGET
 
