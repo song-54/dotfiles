@@ -66,7 +66,7 @@ check_cmd() {
 #     argm 3 cmd $@ <<-EOM
 #     EOM
 #   }
-argm() {
+function argm() {
 	n=$1
 	func=$2
 	detect_read
@@ -76,26 +76,26 @@ argm() {
 
 	test "$ZSH_VERSION" && z=1 || z=0
 	if [ -n "$args" ]; then
-		match=0
+		local argm_match=0
 		while $READ line; do
 			if [ "${line[z]::1}" = "#" ]; then
 				continue
 			fi
 
-			match=1
+			argm_match=1
 			for i in $(seq $n); do
 				if [ "${line[z+i-1]}" != "${args[z+i-1]}" ]; then
-					match=0
+					argm_match=0
 					break
 				fi
 			done
-			if [ $match -eq 1 ]; then
+			if [ $argm_match -eq 1 ]; then
 				true
 				$func ${line[@]}
 				break
 			fi
 		done
-		if [ $match -eq 0 ]; then
+		if [ $argm_match -eq 0 ]; then
 			false
 			$func ${args[@]}
 		fi
