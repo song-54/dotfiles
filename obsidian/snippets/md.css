@@ -1,0 +1,21 @@
+.HyperMD-header span[contenteditable="false"]:before {
+        color: var(--text-faint);
+}
+.HyperMD-header-1 span[contenteditable="false"]:before {
+        content: "# ";
+}
+.HyperMD-header-2 span[contenteditable="false"]:before {
+        content: "## ";
+}
+.HyperMD-header-3 span[contenteditable="false"]:before {
+        content: "### ";
+}
+.HyperMD-header-4 span[contenteditable="false"]:before {
+        content: "#### ";
+}
+.HyperMD-header-5 span[contenteditable="false"]:before {
+        content: "##### ";
+}
+.HyperMD-header-6 span[contenteditable="false"]:before {
+        content: "###### ";
+}

@@ -1,0 +1,80 @@
+{
+  "hotkeys": [
+    {
+      "sequence": [
+        {
+          "key": "e",
+          "shift": false,
+          "alt": false,
+          "ctrl": true,
+          "meta": false
+        },
+        {
+          "key": "r",
+          "shift": false,
+          "alt": false,
+          "ctrl": false,
+          "meta": false
+        }
+      ],
+      "commandID": "file-explorer:reveal-active-file"
+    },
+    {
+      "sequence": [
+        {
+          "key": "e",
+          "shift": false,
+          "alt": false,
+          "ctrl": true,
+          "meta": false
+        },
+        {
+          "key": "|",
+          "shift": true,
+          "alt": false,
+          "ctrl": false,
+          "meta": false
+        }
+      ],
+      "commandID": "workspace:split-vertical"
+    },
+    {
+      "sequence": [
+        {
+          "key": "e",
+          "shift": false,
+          "alt": false,
+          "ctrl": true,
+          "meta": false
+        },
+        {
+          "key": "\"",
+          "shift": true,
+          "alt": false,
+          "ctrl": false,
+          "meta": false
+        }
+      ],
+      "commandID": "workspace:split-horizontal"
+    },
+    {
+      "sequence": [
+        {
+          "key": "e",
+          "shift": false,
+          "alt": false,
+          "ctrl": true,
+          "meta": false
+        },
+        {
+          "key": "R",
+          "shift": true,
+          "alt": false,
+          "ctrl": false,
+          "meta": false
+        }
+      ],
+      "commandID": "app:toggle-right-sidebar"
+    }
+  ]
+}
