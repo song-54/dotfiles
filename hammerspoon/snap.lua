@@ -151,7 +151,9 @@ function window.raise_all()
 	local windows = app:allWindows()
 
 	for i, win in ipairs(windows) do
-		win:raise()
+		if win:isStandard() then
+			win:raise()
+		end
 	end
 end
 
