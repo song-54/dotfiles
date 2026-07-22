@@ -43,19 +43,15 @@ info() {
 check_cmd() {
 	local name=$1
 	local cmd=${2:-command -v "$name"}
-	local default=$3
 
 	cmd=$(eval $cmd)
-	if [ $? -eq 0 ]; then
+	check_result=$?
+	if [ $check_result -eq 0 ]; then
 		$ECHO 1>&2 [${GREEN}+${NC}] $name: $cmd
-		return 0
-	elif $default; then
-		$ECHO 1>&2 [${YELLOW}v${NC}] $name
-		return 2
 	else
 		$ECHO 1>&2 [${RED}-${NC}] $name
-		return 1
 	fi
+	return $check_result
 }
 
 # argument match
