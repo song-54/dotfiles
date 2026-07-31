@@ -55,7 +55,10 @@ _init_ruby() {
 	chruby ruby
 }
 
-_init_fzf() { [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh ; }
+_init_fzf() {
+	if [ -n "$BASH_VERSION" ] && [ -f ~/.fzf.bash ]; then source ~/.fzf.bash;
+	elif [ -n "$ZSH_VERSION" ] && [ -f ~/.fzf.zsh ]; then source ~/.fzf.zsh; fi
+}
 
 _init_nvm() {
 	export NVM_DIR="$HOME/.nvm"
