@@ -130,34 +130,36 @@ wt_config() {
 	local dst_dir=$1
 	local config=${2:-$WORK_CONFIG}
 
-	local section=""
-	while IFS= read -r line || [[ -n "$line" ]]; do
-		[[ -z "$line" ]] && continue
-		[[ "$line" = \#* ]] && continue
+	if [[ -r "$primary_dir/$config" ]]; then
+		local section=""
+		while IFS= read -r line || [[ -n "$line" ]]; do
+			[[ -z "$line" ]] && continue
+			[[ "$line" = \#* ]] && continue
 
-		local src="$src_dir/$line"
-		local dst="$dst_dir/$line"
+			local src="$src_dir/$line"
+			local dst="$dst_dir/$line"
 
-		case "$line" in
-			"[link]") section="link" ;;
-			"[copy]") section="copy" ;;
-			"["*"]") section="" ;;   # unknown section: ignore following lines
-			*)
-				case "$section" in
-					link)
-						if [ -e "$src" ]; then
-							exe ln -s $src $dst
-						fi
-						;;
-					copy)
-						if [ -e "$src" ]; then
-							exe cp -R $src $dst
-						fi
-						;;
-				esac
-				;;
-		esac
-	done < "$primary_dir/$config"
+			case "$line" in
+				"[link]") section="link" ;;
+				"[copy]") section="copy" ;;
+				"["*"]") section="" ;;   # unknown section: ignore following lines
+				*)
+					case "$section" in
+						link)
+							if [ -e "$src" ]; then
+								exe ln -s $src $dst
+							fi
+							;;
+						copy)
+							if [ -e "$src" ]; then
+								exe cp -R $src $dst
+							fi
+							;;
+					esac
+					;;
+			esac
+		done < "$primary_dir/$config"
+	fi
 }
 
 wt_add() {
