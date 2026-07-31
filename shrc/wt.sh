@@ -55,26 +55,26 @@ wt_match() {
 	local target=$1
 	local primary_name=$(wt_primary_name)
 
-	local path
+	local wtpath
 	if [ "$target" = "-i" ]; then
 		# interactive mode
-		path="$(git worktree list | awk '{print $1}' | fzf --prompt="Select worktree: " --height=1% --reverse)"
-		[ -n "$path" ] || return 2
+		wtpath="$(git worktree list | awk '{print $1}' | fzf --prompt="Select worktree: " --height=1% --reverse)"
+		[ -n "$wtpath" ] || return 2
 	else
 		# try match with "{name}-{target}"
-		path="$(git worktree list | awk '{print $1}' | grep -F -- "${primary_name}-$target" | head -n 1)"
+		wtpath="$(git worktree list | awk '{print $1}' | grep -F -- "${primary_name}-$target" | head -n 1)"
 
 		# if fail, try match with target
-		if [ -z "$path" ]; then
-			path="$(git worktree list | awk '{print $1}' | grep -F -- "$target" | head -n 1)"
+		if [ -z "$wtpath" ]; then
+			wtpath="$(git worktree list | awk '{print $1}' | grep -F -- "$target" | head -n 1)"
 		fi
-		if [ -z "$path" ]; then
+		if [ -z "$wtpath" ]; then
 			echo "wt_match: worktree not for \"$target\"" >&2
 			return 1
 		fi
 	fi
 
-	echo $path
+	echo $wtpath
 	return 0
 }
 
@@ -88,28 +88,28 @@ wt_cd() {
 		return
 	fi
 
-	local path=$(wt_match "$target")
+	local wtpath=$(wt_match "$target")
 	if [ $? -eq 0 ]; then
-		exe cd "$path"
+		exe cd "$wtpath"
 	fi
 }
 
 wt_del() {
-	local path=$(wt_match "$@")
+	local wtpath=$(wt_match "$@")
 	local _match=$?
 	if [ $_match -ne 0 ]; then
 		return $_match
 	fi
 
 	local answer
-	printf 'Remove worktree %s? [y/f/N] ' "$path"
+	printf 'Remove worktree %s? [y/f/N] ' "$wtpath"
 	read -r answer
 	case "$answer" in
 		y|Y|yes|YES|Yes)
-			exe git worktree remove "$path"
+			exe git worktree remove "$wtpath"
 			;;
 		f|force)
-			exe git worktree remove --force "$path"
+			exe git worktree remove --force "$wtpath"
 			;;
 		*)
 			return 0
@@ -172,7 +172,7 @@ wt_add() {
 		local branch="${head -c 2 /dev/urandom | xxd -p}"
 	fi
 
-	local path="$WORK_FOREST/$name-$branch"
-	exe git worktree add --detach "$path"
-	wt_config "$path"
+	local wtpath="$WORK_FOREST/$name-$branch"
+	exe git worktree add --detach "$wtpath"
+	wt_config "$wtpath"
 }
