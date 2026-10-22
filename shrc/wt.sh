@@ -30,6 +30,9 @@ wt() {
 				echo "wt: usage: wt del [name] <branch>" >&2
 			fi
 			;;
+		c | conf)
+			wt_config "$@"
+			;;
 		*)
 			echo "wt: unknown command: $command" >&2
 			return 3
@@ -48,6 +51,10 @@ wt_primary_dir() {
 wt_primary_name() {
 	local primary=$(wt_primary_dir)
 	echo "${primary##*/}"
+}
+
+wt_current_dir() {
+	git rev-parse --show-toplevel
 }
 
 # match worktree by name or branch
@@ -117,7 +124,7 @@ wt_del() {
 	esac
 }
 
-# worktree config: .wtconf
+# worktree config: .wtconfig
 # [link]
 # node_modules
 # .venv
@@ -126,8 +133,8 @@ wt_del() {
 # .env
 wt_config() {
 	local primary_dir="$(wt_primary_dir)"
-	local src_dir="$(git rev-parse --show-toplevel)"
-	local dst_dir=$1
+	local src_dir=$primary_dir
+	local dst_dir=${1:-$(wt_current_dir)}
 	local config=${2:-$WORK_CONFIG}
 
 	if [[ -r "$primary_dir/$config" ]]; then
