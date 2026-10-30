@@ -88,10 +88,9 @@ wt_cd() {
 		return
 	fi
 
-	local wtpath=$(wt_match "$target")
-	if [ $? -eq 0 ]; then
-		exe cd "$wtpath"
-	fi
+	local wtpath # "local" returns 0
+	wtpath=$(wt_match "$target") || return $?
+	exe cd "$wtpath"
 }
 
 wt_del() {
