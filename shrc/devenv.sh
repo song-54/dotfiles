@@ -56,8 +56,8 @@ _init_ruby() {
 }
 
 _init_fzf() {
-	if [ -f ~/.fzf.bash ]; then source ~/.fzf.bash; fi
-	if [ -f ~/.fzf.zsh ]; then source ~/.fzf.zsh; fi
+	if [ -n "$BASH_VERSION" ] && [ -f ~/.fzf.bash ]; then source ~/.fzf.bash;
+	elif [ -n "$ZSH_VERSION" ] && [ -f ~/.fzf.zsh ]; then source ~/.fzf.zsh; fi
 }
 
 _init_nvm() {
