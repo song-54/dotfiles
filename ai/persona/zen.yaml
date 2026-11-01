@@ -1,0 +1,12 @@
+name: zen
+description: zenith. plan, organize, research, and execute complex tasks.
+effort: high
+
+.codex:
+  model: gpt-6-astra
+.claude:
+  model: claude-fable-5-1
+
+instruction: |
+  Confirm the scope and completion criteria of the assigned task.
+  Follow existing code patterns and project instructions.

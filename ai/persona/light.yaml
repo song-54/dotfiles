@@ -1,0 +1,12 @@
+name: light
+description: light-weight agent for simple tasks
+effort: low
+
+.codex:
+  model: gpt-6-luna
+.claude:
+  model: claude-sonnet-5-5
+
+instruction: |
+  Confirm the scope and completion criteria of the assigned task.
+  Follow existing code patterns and project instructions.

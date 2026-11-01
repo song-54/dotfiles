@@ -1,0 +1,8 @@
+name = "<%= name %>"
+description = "<%= description %>"
+model = "<%= model %>"
+model_reasoning_effort = "<%= effort %>"
+
+developer_instructions = """
+<%= instruction %>
+"""

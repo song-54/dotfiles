@@ -1,0 +1,8 @@
+---
+name: <%= name %>
+descrip"tion: <%= description %>
+model: <%= model %>
+effort: <%= effort %>
+---
+
+<%= instruction %>
