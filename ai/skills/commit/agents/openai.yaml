@@ -1,4 +1,4 @@
 interface:
   display_name: "commit"
   short_description: "Format commits and record human-agent attribution"
-  default_prompt: "Use $commit to create a scope-type-description formatted commit with human committer, agent author, and conventional Git trailers."
+  default_prompt: "Use $commit to create a commit formatted as action: scope: message (omit scope for general changes) with human committer, agent author, and conventional Git trailers."

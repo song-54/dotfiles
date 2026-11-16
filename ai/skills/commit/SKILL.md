@@ -1,6 +1,6 @@
 ---
 name: commit
-description: "Create consistently formatted Git commits while recording human and AI-agent responsibility: preserve the user's configured identity as committer, assign the integrating model and reasoning effort as author, format subjects by scope and type, and use conventional Git trailers for distinct contributing agents. Use when creating commits with agent attribution, documenting multi-agent contributions, amending agent metadata, or rewriting recent commits to add or correct author, subject, and trailer records."
+description: "Create consistently formatted Git commits while recording human and AI-agent responsibility: preserve the user's configured identity as committer, assign the integrating model and reasoning effort as author, format subjects by action and optional scope, and use conventional Git trailers for distinct contributing agents. Use when creating commits with agent attribution, documenting multi-agent contributions, amending agent metadata, or rewriting recent commits to add or correct author, subject, and trailer records."
 ---
 
 # Git Agent Attribution
@@ -59,24 +59,24 @@ Do not credit an agent merely because it was spawned, consulted, or listed. Cred
 Format a commit subject as:
 
 ```text
-{scope}: {type}: {description}
+{action}: {scope}: {message}
 ```
 
 - Derive `scope` from the staged change, using the narrowest recognizable scope name such as `tui`, `core`, or `app-server`.
 - Omit `scope` when the change is cross-cutting, spans a broad scope, or is general:
 
   ```text
-  {type}: {description}
+  {action}: {message}
   ```
 
-- Use a concise lowercase `type` that classifies the change, such as `fix`, `improve`, `docs`, `feat`, `test`, `refactor`, `build`, `ci`, or `chore`.
-- Write `description` as a concise summary of the committed change.
+- Use a concise lowercase `action` that classifies the change, such as `fix`, `improve`, `docs`, `feat`, `test`, `refactor`, `build`, `ci`, or `chore`.
+- Write `message` as a concise summary of the committed change.
 
 Examples:
 
 ```text
-tui: fix: preserve selection after refresh
-core: improve: reuse MCP client sessions
+fix: tui: preserve selection after refresh
+improve: core: reuse MCP client sessions
 docs: explain remote executor setup
 ```
 
@@ -110,7 +110,7 @@ git commit \
   --trailer="Co-authored-by: o3-high@codex <codex@agent.invalid>" \
   --trailer="Reviewed-by: gpt-5.6-terra-medium@codex <codex@agent.invalid>" \
   --trailer="Tested-by: gpt-5.6-terra-medium@codex <codex@agent.invalid>" \
-  -m "tui: feat: describe the change"
+  -m "feat: tui: describe the change"
 ```
 
 Omit trailers that do not apply. If a reviewer, tester, or co-author is also `gpt-5.6-sol-high@codex`, omit all trailers for that full identifier because it is already represented as author. Otherwise, keep every applicable distinct role, as shown by the reviewer and tester trailers for `gpt-5.6-terra-medium@codex` above.
@@ -145,6 +145,6 @@ The expected result is:
 
 - Author: integrating agent's full model-and-effort identity
 - Committer: configured human Git identity
-- Subject: `{scope}: {type}: {description}`, or `{type}: {description}` when scope is omitted
+- Subject: `{action}: {scope}: {message}`, or `{action}: {message}` when scope is omitted
 - Body: only applicable conventional trailers for distinct model identities
 - Worktree: unchanged except for the requested commit operation
