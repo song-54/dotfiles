@@ -26,8 +26,8 @@ dot() {
 	popd >/dev/null
 
 	# setup dir
-	local BIN_DIR=$HOME/.bin
-	local INSTALL_DIR=$HOME/.bin/install
+	local BIN_DIR=$HOME/.local/bin
+	local INSTALL_DIR=$HOME/.local/state/dotfiles$
 	mkdir $BIN_DIR 2>/dev/null
 	mkdir $INSTALL_DIR 2>/dev/null
 

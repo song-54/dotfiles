@@ -1,5 +1,5 @@
 function sdkman() {
-	lst=$HOME/.bin/local/sdk.lst
+	lst=$HOME/.local/config/sdk.lst
 	# ex) jdk 8 java 8.0.0-dist
 	cmd() { test $? -eq 0 && exe sdk use $3 $4 || exe sdk $@; }
 	argm 2 cmd $@ < $lst
@@ -7,7 +7,7 @@ function sdkman() {
 
 function jdk() {
 	# n sdk_java_version
-	lst=$HOME/.bin/local/jdk.lst
+	lst=$HOME/.local/config/jdk.lst
 	cmd() { test $? -eq 0 && exe sdk use java $2; }
 	argm 1 cmd $@ < $lst
 }
