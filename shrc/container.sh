@@ -76,3 +76,9 @@ function kucomp() {
 		complete -o default -F __start_kubectl ku
 	fi
 }
+
+# git
+githot='git log --format=format: --name-only --since="1 year ago" | sort | uniq -c | sort -nr | head -20' # frequently changed files
+gitc='git shortlog -sn --no-merges' # commiter
+gitbug='git log -i -E --grep="fix|bug|broken" --name-only --format='' | sort | uniq -c | sort -nr | head -20'
+gitfr='git log --format='%ad' --date=format:'%Y-%m' | sort | uniq -c'
