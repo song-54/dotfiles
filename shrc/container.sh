@@ -1,7 +1,8 @@
 # vi: ft=bash
 # docker#
 alias dk=docker
-alias dkrun='docker run -it'
+alias dkr='docker run -it --rm'
+alias dkup='docker run -it --name'
 alias dke='docker exec -it'
 alias dksh='docker exec -it'
 alias dkc='docker container'
