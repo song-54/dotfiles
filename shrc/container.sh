@@ -12,7 +12,29 @@ alias dkic='docker rmi $(docker images -f "dangling=true" -q)'
 # run --mount type=bind,source=$SRC,target=/$TARGET
 
 # kubernetes
-alias ku=kubectl
+#alias ku=kubectl
+function ku() {
+    export KUCTX= # enable starship
+	cmd() {
+        if test $? -eq 0; then
+            if [ "$#" -eq 3 ]; then
+                exe kubectl config use-context $3
+            else
+                exe kubectl --context "$3" "${@:4}"
+            fi
+        else
+            # default alias
+            exe kubectl $@
+        fi
+	}
+	# kube list
+	if [ -f $KULST ]; then
+		# arg match: name cluster -> context namespace cluster
+		argm 2 cmd $@ < $KULST
+	else
+		kubectl $@
+	fi
+}
 alias kuls='kubectl get pod,deploy,svc,statefulset'
 alias kua='kubectl apply'
 alias kuc='kubectl create'
