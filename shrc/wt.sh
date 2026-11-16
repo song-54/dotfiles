@@ -95,7 +95,8 @@ wt_cd() {
 		return
 	fi
 
-	local wtpath=$(wt_match "$target")
+	local wtpath
+	wtpath=$(wt_match "$target")
 	if [ $? -eq 0 ]; then
 		exe cd "$wtpath"
 	fi
