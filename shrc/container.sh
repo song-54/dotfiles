@@ -15,20 +15,26 @@ alias dkic='docker rmi $(docker images -f "dangling=true" -q)'
 # kubernetes
 #alias ku=kubectl
 function ku() {
-    export KUCTX= # enable starship
+	export KUCTX= # enable starship
 	cmd() {
-        if test $? -eq 0; then
-            if [ "$#" -eq 3 ]; then
-                exe kubectl config use-context $3
-            else
-                exe kubectl --context "$3" "${@:4}"
-            fi
-        else
-            # default alias
-            exe kubectl $@
-        fi
+		if test $? -eq 0; then
+			if [ "$#" -eq 3 ]; then
+				exe kubectl config use-context $3
+			else
+				local alias=$(alias "ku$4" | sed -E "s/^(alias )?ku$4='kubectl (.*)'$/\2/")
+				if [ -n "$alias" ]; then
+					exe kubectl --context "$3" "$alias" "${@:5}"
+				else
+					exe kubectl --context "$3" "${@:4}"
+				fi
+			fi
+		else
+			# default alias
+			exe kubectl $@
+		fi
 	}
 	# kube list
+	local KULST="${KULST:-$HOME/.config/ku.lst}"
 	if [ -f $KULST ]; then
 		# arg match: name cluster -> context namespace cluster
 		argm 2 cmd $@ < $KULST
