@@ -15,6 +15,11 @@ disabled = false
 format = '[$time]($style) '
 time_format = '%T'
 
+[kubernetes]
+disabled = false
+format = '[$symbol$context]($style)'
+detect_env_vars = ['KUCTX']
+
 [character]
 success_symbol = "[>](bold green)"
 error_symbol = "[x](bold red)"
