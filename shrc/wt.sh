@@ -147,7 +147,16 @@ wt_config() {
 
 			case "$line" in
 				"[link]") section="link" ;;
-				"[copy]") section="copy" ;;
+				"[copy]") section="copy"
+					# detect cp
+					local cp_opts
+					# no overwrite
+					if cp --update=none --help >/dev/null 2>&1; then
+						cp_opts=(--update=none)
+					else
+						cp_opts=(-n)
+					fi
+					;;
 				"["*"]") section="" ;;   # unknown section: ignore following lines
 				*)
 					case "$section" in
@@ -158,7 +167,7 @@ wt_config() {
 							;;
 						copy)
 							if [ -e "$src" ]; then
-								exe cp -R $src $dst
+								exe cp ${cp_opts[@]} -R $src $dst
 							fi
 							;;
 					esac
