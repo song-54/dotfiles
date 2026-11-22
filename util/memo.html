@@ -1,0 +1,455 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Scratch</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --background: #f5f6f8;
+      --foreground: #202632;
+      --control-background: white;
+      --control-border: #ccd2dc;
+      --message-background: white;
+      --message-border: #e1e5eb;
+      --accent: #315ce8;
+      --action-color: #737d8c;
+    }
+
+    * { box-sizing: border-box; }
+    [hidden] { display: none !important; }
+
+    body {
+      margin: 0;
+      background: var(--background);
+      color: var(--foreground);
+      font: 16px system-ui, sans-serif;
+    }
+
+    main { max-width: 760px; margin: auto; padding: 24px; }
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-top: -12px;
+      padding: 12px 0;
+      background: var(--background);
+    }
+    #memoTitle { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+
+    input, textarea, button {
+      font: inherit;
+      border: 1px solid var(--control-border);
+      border-radius: 10px;
+      padding: 10px;
+    }
+
+    input { width: 160px; }
+    button { cursor: pointer; background: var(--control-background); }
+    button:disabled { opacity: .5; cursor: wait; }
+
+    #messages { padding: 12px 0; list-style: none; min-height: 40vh; }
+    #messages li {
+      position: relative;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      background: var(--message-background);
+      border: 1px solid var(--message-border);
+      border-radius: 14px;
+      padding: 16px;
+      margin: 12px 0;
+    }
+    #messages a { display: block; color: inherit; text-decoration: none; }
+    #messages .message-item { display: flow-root; white-space: normal; }
+    .message-actions { float: right; display: flex; gap: 6px; margin: 0 0 6px 12px; }
+    .message-actions button {
+      position: relative;
+      display: grid;
+      place-items: center;
+      width: 32px;
+      height: 32px;
+      padding: 0;
+      color: var(--action-color);
+    }
+    .message-actions button:hover { color: var(--foreground); }
+    .message-copy::before, .message-copy::after {
+      content: '';
+      position: absolute;
+      width: 11px;
+      height: 13px;
+      border: 1.5px solid currentColor;
+      border-radius: 2px;
+      background: var(--control-background);
+    }
+    .message-copy::before { top: 7px; left: 7px; }
+    .message-copy::after { top: 11px; left: 11px; }
+    .message-content { line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }
+    .message-content.collapsed { max-height: 6em; overflow: clip; }
+    .message-toggle {
+      display: grid;
+      place-items: center;
+      width: 32px;
+      height: 32px;
+      padding: 0;
+    }
+    .message-toggle::before {
+      content: '';
+      width: 8px;
+      height: 8px;
+      border-right: 2px solid currentColor;
+      border-bottom: 2px solid currentColor;
+      transform: translateY(-2px) rotate(45deg);
+    }
+    .message-toggle[aria-expanded="true"]::before { transform: translateY(2px) rotate(225deg); }
+    .clipboard-fallback { position: fixed; top: 0; left: 0; width: 1px; height: 1px; opacity: 0; }
+
+    form { display: flex; gap: 10px; }
+    #composer { position: sticky; bottom: 0; background: var(--background); padding: 12px 0; }
+    textarea { flex: 1; min-height: 90px; resize: vertical; }
+    #send { background: var(--accent); color: white; border: 0; }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --background: #16191f;
+        --foreground: #e6e9ef;
+        --control-background: #242932;
+        --control-border: #414957;
+        --message-background: #222730;
+        --message-border: #363e4b;
+        --accent: #5277f0;
+        --action-color: #929cab;
+      }
+      input, textarea, button { background: var(--control-background); color: var(--foreground); }
+      input::placeholder, textarea::placeholder { color: #a0a9b8; opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <button id="back" type="button" aria-label="목록">←</button>
+      <span id="memoTitle" hidden></span>
+      <form id="idForm">
+        <input id="memoId" aria-label="메모 ID" maxlength="100" placeholder="예: daily" required>
+        <button id="open" type="submit" aria-label="열기">↵</button>
+      </form>
+    </header>
+    <ol id="messages" aria-label="메모 타임라인"></ol>
+    <form id="composer">
+      <textarea id="message" aria-label="새 메모" placeholder="내용을 입력하세요. Ctrl / ⌘ + Enter로 저장"></textarea>
+      <button id="send" type="submit" aria-label="저장">↑</button>
+    </form>
+  </main>
+  <template id="messageTemplate">
+    <li class="message-item">
+      <div class="message-actions">
+        <button class="message-copy" type="button" title="이 메모 복사" aria-label="이 메모 복사"></button>
+        <button class="message-toggle" type="button" title="펼치기" aria-label="메모 펼치기" aria-expanded="false" hidden></button>
+      </div>
+      <div class="message-content"></div>
+    </li>
+  </template>
+  <script>
+    'use strict';
+
+    const STORAGE_DIR = '.spad';
+    const SEPARATOR = '<|separator|>';
+    const ID_PATTERN = /^[\p{L}\p{N}_-]{1,100}$/u;
+    const pageURL = new URL(location.href);
+    const initialId = pageURL.searchParams.get('id');
+    const memoId = initialId === null ? null : initialId.trim();
+    const isListView = initialId === null;
+    // Resolve alongside this page, including any dufs --path-prefix.
+    const rootURL = new URL('./', pageURL);
+
+    // Encode the memo ID and build its storage file URL relative to the current page directory.
+    function memoFileURL(id) {
+      return new URL(STORAGE_DIR + '/' + encodeURIComponent(id) + '.txt', rootURL);
+    }
+
+    // Server access.
+    // Fetch without caching and include same-origin credentials. Callers check the HTTP status.
+    function request(url, options = {}) {
+      return fetch(url, { cache: 'no-store', credentials: 'same-origin', ...options });
+    }
+
+    // Throw an error with the action name and HTTP status if the response is unsuccessful.
+    function requireSuccess(response, action) {
+      if (!response.ok) throw new Error(action + ' 실패 (HTTP ' + response.status + ')');
+    }
+
+    const memoApi = {
+      // Return valid memo IDs, newest first. A missing directory yields an empty list.
+      async list() {
+        const response = await request(new URL(STORAGE_DIR + '/?json', rootURL));
+        if (response.status === 404) return [];
+        requireSuccess(response, '목록 불러오기');
+        const data = await response.json();
+        if (!Array.isArray(data.paths)) {
+          throw new Error('dufs 디렉토리 목록 응답을 확인해 주세요.');
+        }
+        return data.paths
+          .filter(file => ['File', 'SymlinkFile'].includes(file.path_type) && file.name.endsWith('.txt'))
+          .sort((a, b) => b.mtime - a.mtime)
+          .map(file => file.name.slice(0, -4))
+          .filter(id => ID_PATTERN.test(id));
+      },
+
+      // Read the raw memo text. Return null if the file is missing.
+      async read(id) {
+        const response = await request(memoFileURL(id));
+        if (response.status === 404) return null;
+        requireSuccess(response, '불러오기');
+        return response.text();
+      },
+
+      // Ask the server to create only if missing; atomic protection requires server support.
+      async create(id) {
+        const url = memoFileURL(id);
+        const existing = await request(url, { method: 'HEAD' });
+        if (existing.ok) return;
+        if (existing.status !== 404) requireSuccess(existing, '파일 확인');
+        const response = await request(url, {
+          method: 'PUT',
+          headers: { 'If-None-Match': '*' },
+          body: '',
+        });
+        // Another client may have created the memo after HEAD. Open it without overwriting.
+        if (response.status === 412) return;
+        requireSuccess(response, '메모 생성');
+      },
+
+      // Append content to an existing file using PATCH. On failure, ask the user to verify whether it was saved.
+      async append(id, content) {
+        const url = memoFileURL(id);
+        let response;
+        try {
+          response = await request(url, {
+            method: 'PATCH',
+            headers: { 'X-Update-Range': 'append', 'Content-Type': 'text/plain; charset=utf-8' },
+            body: '\n' + SEPARATOR + '\n' + content + '\n',
+          });
+        } catch (error) {
+          throw new Error(error.message + ' 저장 여부를 새로고침으로 확인한 후 재시도하세요.');
+        }
+        if (!response.ok) {
+          throw new Error('저장 실패 (HTTP ' + response.status + '). 새로고침으로 저장 여부를 확인하세요.');
+        }
+      },
+    };
+
+    const memoUi = {
+      elements: {
+        back: document.querySelector('#back'),
+        title: document.querySelector('#memoTitle'),
+        idForm: document.querySelector('#idForm'),
+        idInput: document.querySelector('#memoId'),
+        open: document.querySelector('#open'),
+        list: document.querySelector('#messages'),
+        messageTemplate: document.querySelector('#messageTemplate'),
+        composer: document.querySelector('#composer'),
+        message: document.querySelector('#message'),
+        send: document.querySelector('#send'),
+      },
+      state: { busy: false, loaded: false },
+
+      // Build a memo page URL, preserving other query parameters and the hash. Return the list URL when id is null.
+      pageURL(id = null) {
+        const url = new URL(location.href);
+        if (id === null) url.searchParams.delete('id');
+        else url.searchParams.set('id', id);
+        return url;
+      },
+
+      // Throw a validation error if the ID uses unsupported characters or exceeds the allowed length range.
+      validateId(id) {
+        if (!ID_PATTERN.test(id)) {
+          throw new Error('ID는 문자, 숫자, _ 또는 -로 1~100자 입력하세요.');
+        }
+      },
+
+      // Clone the card template and fill its content as text without interpreting HTML.
+      messageItem(content) {
+        const item = this.elements.messageTemplate.content.firstElementChild.cloneNode(true);
+        const body = item.querySelector('.message-content');
+        const toggle = item.querySelector('.message-toggle');
+        const copy = item.querySelector('.message-copy');
+        body.textContent = content;
+        body.id = 'message-' + (this.elements.list.childElementCount + 1);
+        toggle.setAttribute('aria-controls', body.id);
+        toggle.addEventListener('click', () => {
+          const expanded = toggle.getAttribute('aria-expanded') !== 'true';
+          toggle.setAttribute('aria-expanded', String(expanded));
+          toggle.setAttribute('aria-label', expanded ? '메모 접기' : '메모 펼치기');
+          toggle.title = expanded ? '접기' : '펼치기';
+          body.classList.toggle('collapsed', !expanded);
+        });
+        copy.addEventListener('click', () => this.run(() => this.copyMemo(body.textContent)));
+        return item;
+      },
+
+      // Count displayed lines, including wrapping, whenever the timeline width changes.
+      updateFolding() {
+        for (const body of this.elements.list.querySelectorAll('.message-content')) {
+          const toggle = body.closest('.message-item').querySelector('.message-toggle');
+          const lineHeight = parseFloat(getComputedStyle(body).lineHeight);
+          const long = body.textContent.split(/\r\n|\r|\n/).length >= 5 ||
+            body.scrollHeight >= lineHeight * 5 - 1;
+          toggle.hidden = !long;
+          body.classList.toggle('collapsed', long && toggle.getAttribute('aria-expanded') !== 'true');
+        }
+      },
+
+      // HTTP pages can copy through the legacy selection-based browser command.
+      async copyMemo(text) {
+        if (window.isSecureContext && navigator.clipboard?.writeText) {
+          try {
+            await navigator.clipboard.writeText(text);
+            return;
+          } catch (_) { /* Try selection-based copying if clipboard access is denied. */ }
+        }
+        const active = document.activeElement;
+        const selectionStart = this.elements.message.selectionStart;
+        const selectionEnd = this.elements.message.selectionEnd;
+        const field = document.createElement('textarea');
+        field.className = 'clipboard-fallback';
+        field.value = text;
+        field.readOnly = true;
+        document.body.append(field);
+        try {
+          field.focus({ preventScroll: true });
+          field.select();
+          if (!document.execCommand('copy')) throw new Error('복사를 지원하지 않는 브라우저입니다. 메모 내용을 선택해 직접 복사하세요.');
+        } finally {
+          field.remove();
+          active?.focus({ preventScroll: true });
+          this.elements.message.setSelectionRange(selectionStart, selectionEnd);
+        }
+      },
+
+      // Prevent overlapping operations and disable buttons and ID input. Report errors and restore controls when finished.
+      async run(action) {
+        const { elements } = this;
+        if (this.state.busy) return;
+        const controls = [elements.back, elements.open, elements.send, elements.idInput,
+          ...elements.list.querySelectorAll('.message-actions button')];
+        this.state.busy = true;
+        controls.forEach(control => { control.disabled = true; });
+        try {
+          await action();
+        } catch (error) {
+          alert(error.message);
+        } finally {
+          this.state.busy = false;
+          controls.forEach(control => { control.disabled = false; });
+        }
+      },
+
+      // Load valid memo IDs from dufs and display links in order of most recent modification.
+      async loadList() {
+        const { elements } = this;
+        const ids = await memoApi.list();
+        elements.list.replaceChildren();
+        for (const id of ids) {
+          const item = document.createElement('li');
+          const link = document.createElement('a');
+          link.textContent = id;
+          link.href = this.pageURL(id);
+          item.append(link);
+          elements.list.append(item);
+        }
+      },
+
+      // Load the current memo and update the view and loaded state. Redirect to the list if the file is missing.
+      async loadMemo() {
+        const { elements } = this;
+        this.validateId(memoId);
+        const text = await memoApi.read(memoId);
+        if (text === null) {
+          location.replace(this.pageURL());
+          return;
+        }
+        // Consume the complete separator frame, then remove only the newline added by append.
+        // This also reads existing files without changing user-authored boundary blank lines.
+        const contents = text.split(/(?:^|\r?\n)<\|separator\|>(?:\r?\n|$)/)
+          .map(part => part.replace(/\r?\n$/, ''))
+          .filter(content => content.trim());
+        elements.list.replaceChildren();
+        for (const content of contents) elements.list.append(this.messageItem(content));
+        this.updateFolding();
+        this.state.loaded = true;
+        history.replaceState(null, '', this.pageURL(memoId));
+      },
+
+      // Validate the entered ID, create the file if missing, and navigate to its memo page.
+      async createMemo() {
+        const { elements } = this;
+        const id = elements.idInput.value.trim();
+        this.validateId(id);
+        await memoApi.create(id);
+        location.assign(this.pageURL(id));
+      },
+
+      // Save content to the open memo and append it to the timeline. Preserve edits made while saving.
+      async saveMemo() {
+        const { elements } = this;
+        if (!this.state.loaded) throw new Error('먼저 메모를 열어 주세요.');
+        const content = elements.message.value;
+        if (!content.trim()) throw new Error('내용을 입력하세요.');
+        if (content.split(/\r?\n/).includes(SEPARATOR)) {
+          throw new Error('구분자만 있는 줄은 내용으로 사용할 수 없습니다.');
+        }
+        await memoApi.append(memoId, content);
+        if (elements.message.value === content) elements.message.value = '';
+        // Show this browser's new message; other users' changes require refresh.
+        const item = this.messageItem(content);
+        elements.list.append(item);
+        this.updateFolding();
+        item.scrollIntoView({ block: 'nearest' });
+      },
+
+      // Set up the view, bind form and keyboard events, and load the initial content.
+      init() {
+        const { elements } = this;
+        document.title = isListView ? 'Scratch' : 'Scratch: ' + initialId;
+        elements.back.hidden = isListView;
+        elements.idForm.hidden = !isListView;
+        elements.title.hidden = isListView;
+        elements.title.textContent = initialId || '';
+        elements.composer.hidden = isListView;
+        if (typeof ResizeObserver !== 'undefined') {
+          this.resizeObserver = new ResizeObserver(() => this.updateFolding());
+          this.resizeObserver.observe(elements.list);
+        } else {
+          window.addEventListener('resize', () => this.updateFolding());
+        }
+
+        elements.back.addEventListener('click', () => location.assign(this.pageURL()));
+        elements.idForm.addEventListener('submit', event => {
+          event.preventDefault();
+          this.run(() => this.createMemo());
+        });
+        elements.composer.addEventListener('submit', event => {
+          event.preventDefault();
+          this.run(() => this.saveMemo());
+        });
+        elements.message.addEventListener('keydown', event => {
+          if (event.key === 'Enter' && (event.ctrlKey || event.metaKey) && !event.isComposing) {
+            event.preventDefault();
+            elements.composer.requestSubmit();
+          }
+        });
+
+        this.run(() => isListView ? this.loadList() : this.loadMemo());
+      },
+    };
+
+    memoUi.init();
+  </script>
+</body>
+</html>
