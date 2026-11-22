@@ -91,7 +91,7 @@ function argm() {
 			done
 			if [ $argm_match -eq 1 ]; then
 				true
-				$func ${line[@]}
+				$func ${line[@]} "${args[@]:$n}"
 				break
 			fi
 		done
@@ -105,10 +105,10 @@ function argm() {
 				$ECHO $BLUE$line$NC
 			else
 				key=${line[@]::$n}
-				desc=${line[@]:$n}
-				$ECHO "$GREEN$key\t$YELLOW$desc$NC"
+				key2=${line[@]:$n:1}
+				desc=${line[@]:$((n + 1))}
+				$ECHO "$GREEN$key\t$YELLOW$key2\t$BLUE$desc$NC"
 			fi
 		done
 	fi
 }
-
