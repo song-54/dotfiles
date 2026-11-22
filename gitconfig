@@ -9,6 +9,7 @@
 	rs=restore
 	rst=checkout HEAD --
 	tree=log --graph --full-history --all --pretty=format:"%h%x09%d%x20%s"
+	wt=worktree
 [push]
 	default = simple
 
